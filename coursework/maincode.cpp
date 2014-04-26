@@ -90,6 +90,55 @@ public:
 		for (int j = 0; j < solution.size(); j++)
 			CPT[solution[j] / 2] = 1 - solution[j] % 2;
 	}*/
+	int FindCycle(int curv, vector<vector<int> > & graph, vector<int> & col)
+	{
+		col[curv] = 1;
+		for(int j = 0; j < graph[curv].size(); j++)
+		{
+			int to = graph[curv][j];
+
+			if (col[to] == 0)
+			{
+				if (FindCycle(to, graph, col))
+					return true;	
+			}
+			else if (col[to] == 1)
+			{
+				return true;
+			}
+		}
+		col[curv] = 2;
+		return false;
+	}
+	bool isCycle()         //checking if there is cycle in CPT lines
+	{
+		for (map<vector<int>, int>::iterator it = CPTlines.begin(); it != CPTlines.end(); it++)
+		{
+			int line = it->second;
+
+			vector<vector<int> > graph;                             //building oriented graph of pairwise preferences in CPT line
+			for (int i = 0; i < CPT[line].size(); i++)
+			{
+				int firstv = CPT[line][i].first.second, secondv = CPT[line][i].first.first;		//arguments of pairwise comparison
+				int compresult = CPT[line][i].second;												// 1 - >, 0 - <
+
+				if (firstv >= graph.size() || secondv >= graph.size())										 //resizing graph 
+					graph.resize(max(firstv + 1, secondv + 1));
+
+				if (compresult)
+					graph[firstv].push_back(secondv);
+				else
+					graph[secondv].push_back(firstv);
+			}
+			vector<int> col(graph.size(), 0); //vector of vertices' colors for searching cycle
+
+			for (int j = 0; j < graph.size(); j++)                //dfs for searching cycle
+				if (col[j] == 0)
+					if (FindCycle(j, graph, col))
+						return true;
+		}
+		return false;
+	}
 	void AddSolution(const vector<int> & par, const vector<int> solution, int firstarg, int secondarg)
 	{
 		for(int j = 0; j < solution.size(); j++)
@@ -307,7 +356,7 @@ class CPnet
 		return result;
 	}
 	*/
-
+	
 	bool CreateCPT(int curx, vector<int> & u, Preferences & p, Storage & s, vector<int> & parLegend)
 	{
 		int j, selectedNum = 0;
@@ -380,6 +429,10 @@ class CPnet
 			tmp.AddSolution(u, solution, pairArgs[j].first, pairArgs[j].second);
 			//Node tmp(u, solution);
 		}
+
+		if (tmp.isCycle())             //check if there is a cycle in resulting pairwise order
+			return false;
+
 		CPTs[curx] = tmp;
 		for (j = 0; j < u.size(); j++)
 			g.push_back(make_pair(u[j], curx));
