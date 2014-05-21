@@ -476,11 +476,11 @@ class CPnet
 			bool CPTcreated = false, subsetExists;
 			do 
 			{
-				//flog << "Trying to build new CPT for " << curx << ":\n";
-				//flog << "Parents: ";
-				//for (int i = 0; i < u.size(); i++)
-				//	flog << u[i] << ' ';
-			//	flog << endl;
+			/*	flog << "Trying to build new CPT for " << curx << ":\n";
+				flog << "Parents: ";
+				for (int i = 0; i < u.size(); i++)
+					flog << u[i] << ' ';
+				flog << endl; */
 
 				if (selected.size() <= curx || (selected.size() > curx && !selected[curx]))
 				{
@@ -621,15 +621,15 @@ Storage ScanStorage()
   {
 	  string s;
 	  fin >> s;
-	  cout << s << ' ';
+	  //cout << s << ' ';
 	  In.varNames[j] = s;
 	  In.assignNames[j].resize(In.parInfo[j]);
 	  for (int i = 0; i < In.parInfo[j]; i++)
 	  {
 		  fin >> In.assignNames[j][i];
-		  cout << In.assignNames[j][i] << ' ';
+		 // cout << In.assignNames[j][i] << ' ';
 	  }
-	  cout << endl;
+	//  cout << endl;
   }
 
   //flog << "Objects loaded";
