@@ -27,14 +27,14 @@ class ClassificationTree
 	vector<int> vars; //признаки в вершинах
 	vector<vector<edge> > g;
 	map<int, int> leafVerts;
-	
+
 	double CalculateEntropy(Storage & s, vector<int> & availableObjects)
 	{
 		vector<int> proportions(s.parInfo[s.parNum - 1], 0); //размер вектора равен числу различных возможных значений целевой функции
 
 		for (int j = 0; j < availableObjects. size(); j++)
-			proportions[s.storage[availableObjects[j]].parameters[s.parNum - 1]];       //прибавл€ем 1 в €чейку массива, номером которой €вл€етс€ значение целевой функции дл€ данного объекта
-		
+			proportions[s.storage[availableObjects[j]].parameters[s.parNum - 1]]++;       //прибавл€ем 1 в €чейку массива, номером которой €вл€етс€ значение целевой функции дл€ данного объекта
+
 		double entropy = 0;
 		double all = availableObjects.size();
 
@@ -44,9 +44,9 @@ class ClassificationTree
 				double p = proportions[j];
 				entropy += (p / all) * (log(p / all) / log(2.0));
 			}
-		entropy *= -1;
+			entropy *= -1;
 
-		return entropy;
+			return entropy;
 	}
 	vector<vector<int> > SplitByParameter(Storage & s, vector<int> & availableObjects, int targVar)
 	{
@@ -54,7 +54,7 @@ class ClassificationTree
 
 		for (int j = 0; j < availableObjects.size(); j++)
 			splittedObjects[s.storage[availableObjects[j]].parameters[targVar]].push_back(j);
-		
+
 		return splittedObjects;
 	}
 	double CalculateIG(Storage & s, vector<int> & availableObjects, int targVar, double H)
@@ -98,6 +98,7 @@ class ClassificationTree
 		if(from != -1)
 			g[from].push_back(edge(edgeVar, newv));
 
+		//cout << targetFunctionValue << endl;
 		leafVerts[newv] = targetFunctionValue;
 	}
 	bool isBelongToOneClass(Storage & s, vector<int> & availableObjects)
@@ -111,14 +112,14 @@ class ClassificationTree
 			if (s.storage[availableObjects[j]].parameters[targetFunctionIndex] != sample)
 				return false;
 		}
-
+		//cout << "good on " << sample << endl;
 		return true;
 	}
 	void GenerateDOTFile(Storage & s, string file)
 	{
 		ofstream dot (file);
 
-		dot << "digraph Decision tree {\n";
+		dot << "digraph Decisiontree {\n";
 		for (int j = 0; j < vars.size(); j++)
 		{
 			if (g[j].size() != 0)
@@ -160,16 +161,18 @@ public:
 
 		for (auto it:freeVars)
 		{
-			
+
 			double curIG = CalculateIG(s, availableObjects, it, H);
+			//cout << H << ' ' << curIG << endl;
 			if (curIG > bestIG)
 			{
 				bestIG = curIG;
 				bestVar = it;
 			}
 		}
-
+		//cout << bestVar << endl;
 		vector<vector<int> > splittedObjects = SplitByParameter(s, availableObjects, bestVar);
+	//	cout << splittedObjects.size() << endl;
 		freeVars.erase(freeVars.find(bestVar));
 
 		int curVertIndex = AddVertex(parentVert, bestVar, edgeVar);
@@ -187,7 +190,7 @@ public:
 	void RunID3Algorithm(string learningFile, string testingFile, string dotFile)
 	{
 		Storage mainSt;
-		
+
 		ScanLearningSet(learningFile, mainSt); //learningFile = "c:\\coursework\\cars\\test.txt"
 		targetFunctionIndex = mainSt.parNum - 1;
 
@@ -196,12 +199,13 @@ public:
 			availableObjects[j] = j;
 
 		set<int> freeVars;
-		for (int j = 0; j < freeVars.size(); j++)
+		for (int j = 0; j < mainSt.parNum; j++)
 			if (j != targetFunctionIndex)
 				freeVars.insert(j);
 
+		cout << freeVars.size() << endl;
 		LearnID3(mainSt, availableObjects, -1, -1, freeVars);
 		GenerateDOTFile(mainSt, dotFile);
 	}
-	
+
 };

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#pragma once
 #include "algdata.h"
 using namespace std;
 void ScanLearningSet(string file, Storage & s) //последний параметр - значение целевой функции для данного объекта

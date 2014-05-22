@@ -7,6 +7,7 @@
 #include<set>
 #include<queue>
 #include<map>
+#include "ID3main.h"
 #define INF 100000
 using namespace std;
 
@@ -21,18 +22,7 @@ ofstream watchsets ("c:\\coursework\\testing\\sets.txt");
 
 int globalIsInfoLoaded = 0; //переделать
 
-struct Object
-{
-	vector<int> parameters;
-};
-struct Storage
-{
-	vector<Object> storage;
-	vector<int> parInfo;
-	vector<string> varNames;
-	vector<vector<string> > assignNames; 
-	int objNum, parNum;
-};
+
 struct Preferences
 {
 	vector<pair<int, int> > g;
@@ -922,8 +912,9 @@ int main()
 
 
 
+	/*** код для CP-net ***/
 
-	Storage mainSt = ScanStorage();
+	/*Storage mainSt = ScanStorage();
 	Preferences mainP = ScanPreferences(mainSt.objNum);
 	
 	CPnet mainNet;
@@ -939,5 +930,11 @@ int main()
 	}
 	else
 		fout << "No CPnet";	
+	*/
 
+	/*** завершение кода для CP-net ***/
+
+	ClassificationTree DecisionTree;
+	DecisionTree.RunID3Algorithm(string("c:/coursework/ID3/learningdata.txt"), string(""), string("c:/coursework/ID3/dot/decisiontree.dot"));
+	//system("PAUSE");
 }
