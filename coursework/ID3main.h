@@ -53,7 +53,7 @@ class ClassificationTree
 		vector<vector<int> > splittedObjects(s.parInfo[targVar]);
 
 		for (int j = 0; j < availableObjects.size(); j++)
-			splittedObjects[s.storage[availableObjects[j]].parameters[targVar]].push_back(j);
+			splittedObjects[s.storage[availableObjects[j]].parameters[targVar]].push_back(availableObjects[j]);
 
 		return splittedObjects;
 	}
@@ -146,6 +146,87 @@ public:
 		freeVert = 0;
 	}
 
+	void PrintCrossValidationTestResults(Storage & testSt, string & testingResultsFile, vector<int> & TP, vector<int> & FP, vector<int> & FN, vector<int> & TN)
+	{
+		ofstream fout (testingResultsFile);
+		for (int j = 0; j < testSt.parInfo[targetFunctionIndex]; j++)
+		{
+			fout << "Testing results for class " << testSt.assignNames[targetFunctionIndex][j] << ":\n";
+			fout << "TP = " << TP[j] << " | FP = " << FP[j] << "\n";
+			fout << "FN = " << FN[j] << " | TN = " << TN[j] << "\n";
+			fout << "Precision = " << 100 * TP[j] / (TP[j] + FP[j]) << "%\n";
+			fout << "Recall = " << 100 * TP[j] / (TP[j] + FN[j]) << "%\n";
+			fout << "\n";
+		}
+		fout.close();
+	}
+	void CrossValidationTest(Storage & testSt, string & testingResultsFile)
+	{
+		vector<int> TP(testSt.parInfo[targetFunctionIndex], 0);
+		vector<int> FP(testSt.parInfo[targetFunctionIndex], 0);
+		vector<int> FN(testSt.parInfo[targetFunctionIndex], 0);
+		vector<int> TN(testSt.parInfo[targetFunctionIndex], 0);
+		for  (int typeOfClass = 0; typeOfClass < testSt.parInfo[targetFunctionIndex]; typeOfClass++)
+		{
+			for (int j = 0; j < testSt.objNum; j++)
+			{
+				int testObjClass = testSt.storage[j].parameters[targetFunctionIndex];  //класс, к которому принадлежит текущий объект
+				int predictedClass = CalculateTargetFunction(testSt.storage[j].parameters);
+
+				if (testObjClass == typeOfClass)
+				{
+					if (predictedClass == typeOfClass)
+					{
+						TP[typeOfClass]++;
+					}
+					else
+					{
+						FN[typeOfClass]++;
+					}
+				}
+				else
+				{
+					if(predictedClass != typeOfClass)
+					{
+						TN[typeOfClass]++;
+					}
+					else
+					{
+						FP[typeOfClass]++;
+					}
+				}
+			}
+		}
+		PrintCrossValidationTestResults(testSt, testingResultsFile, TP, FP, FN, TN);
+	}
+
+	int CalculateTargetFunction(vector<int> & objParameters)
+	{
+		int curv = 0;
+		while(true)
+		{
+			if (g[curv].size() == 0) //попали в лист, возвращаем значение в нем
+			{
+				return leafVerts[curv];
+			}
+			int currentParVal = objParameters[vars[curv]];
+			bool isFound = 0;
+
+			for (int j = 0; j < g[curv].size(); j++)
+			{
+				if (g[curv][j].varOnEdge == currentParVal)
+				{
+					curv = g[curv][j].nextVert;
+					isFound = 1;
+					break;
+				}
+			}
+			if (!isFound) //не нашли подходящее ребро
+			{
+				return 0; //возвращаем любое значение целевой функции, например 0
+			}
+		}
+	}
 	void LearnID3(Storage & s, vector<int> availableObjects, int parentVert, int edgeVar, set<int> freeVars)
 	{
 		vector<double> IG(freeVars.size()); //information gain
@@ -153,12 +234,17 @@ public:
 		int p = 0, bestVar = -1;
 		double bestIG = 0;
 
+		
 		if (isBelongToOneClass(s, availableObjects))
 		{
 			AddLeafVertex(parentVert, s.storage[availableObjects[0]].parameters[targetFunctionIndex], edgeVar);
-			return;
+			return;	
 		}
-
+		else
+		{
+			if (freeVars.size() == 0)
+				cout << "Alert\n";
+		}
 		for (auto it:freeVars)
 		{
 
@@ -170,10 +256,9 @@ public:
 				bestVar = it;
 			}
 		}
-		//cout << bestVar << endl;
 		vector<vector<int> > splittedObjects = SplitByParameter(s, availableObjects, bestVar);
-	//	cout << splittedObjects.size() << endl;
-		freeVars.erase(freeVars.find(bestVar));
+	
+		freeVars.erase(bestVar);
 
 		int curVertIndex = AddVertex(parentVert, bestVar, edgeVar);
 
@@ -187,7 +272,7 @@ public:
 		//return bestVar;
 	}
 
-	void RunID3Algorithm(string learningFile, string testingFile, string dotFile)
+	void RunID3Algorithm(string learningFile, string testingFile, string testingResultsFile, string dotFile)
 	{
 		Storage mainSt;
 
@@ -206,6 +291,14 @@ public:
 		cout << freeVars.size() << endl;
 		LearnID3(mainSt, availableObjects, -1, -1, freeVars);
 		GenerateDOTFile(mainSt, dotFile);
-	}
 
+		/*** Тестирование  ***/
+
+		Storage testSt;
+
+		ScanLearningSet(testingFile, testSt);
+
+		CrossValidationTest(testSt, testingResultsFile);
+	}
+	
 };

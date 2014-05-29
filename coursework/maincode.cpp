@@ -935,6 +935,6 @@ int main()
 	/*** завершение кода для CP-net ***/
 
 	ClassificationTree DecisionTree;
-	DecisionTree.RunID3Algorithm(string("c:/coursework/ID3/learningdata.txt"), string(""), string("c:/coursework/ID3/dot/decisiontree.dot"));
+	DecisionTree.RunID3Algorithm(string("c:/coursework/ID3/learningdata.txt"), string("c:/coursework/ID3/testingdata.txt"), string("c:/coursework/ID3/testingresults.txt"), string("c:/coursework/ID3/dot/decisiontree.dot"));
 	//system("PAUSE");
 }
